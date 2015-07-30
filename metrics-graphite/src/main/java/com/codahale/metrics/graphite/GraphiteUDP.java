@@ -20,7 +20,7 @@ public class GraphiteUDP implements GraphiteSender {
     private final int port;
     private InetSocketAddress address;
 
-    private DatagramChannel datagramChannel = null;
+    // private DatagramChannel datagramChannel = null;
     private int failures;
 
     /**
@@ -53,21 +53,23 @@ public class GraphiteUDP implements GraphiteSender {
             throw new IllegalStateException("Already connected");
         }
 
-        if (datagramChannel != null) {
-            datagramChannel.close();
-        }
+        // if (datagramChannel != null) {
+        //     datagramChannel.close();
+        // }
 
         // Resolve hostname
         if (hostname != null) {
             address = new InetSocketAddress(hostname, port);
         }
 
-        datagramChannel = DatagramChannel.open();
+        // Don't cache the nio channel
+        // datagramChannel = DatagramChannel.open();
     }
 
     @Override
     public boolean isConnected() {
-    		return datagramChannel != null && !datagramChannel.socket().isClosed();
+        // return datagramChannel != null && !datagramChannel.socket().isClosed();
+        return true;
     }
 
     @Override
@@ -76,6 +78,8 @@ public class GraphiteUDP implements GraphiteSender {
         if (!isConnected()) {
             connect();
         }
+
+        DatagramChannel channel = DatagramChannel.open();
 
         try {
             StringBuilder buf = new StringBuilder();
@@ -87,11 +91,13 @@ public class GraphiteUDP implements GraphiteSender {
             buf.append('\n');
             String str = buf.toString();
             ByteBuffer byteBuffer = ByteBuffer.wrap(str.getBytes(UTF_8));
-            datagramChannel.send(byteBuffer, address);
+            channel.send(byteBuffer, address);
             this.failures = 0;
         } catch (IOException e) {
             failures++;
             throw e;
+        } finally {
+            channel.close();
         }
     }
 
