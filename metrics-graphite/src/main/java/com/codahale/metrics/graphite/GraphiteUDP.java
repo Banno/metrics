@@ -49,32 +49,17 @@ public class GraphiteUDP implements GraphiteSender {
     @Override
     public void connect() throws IllegalStateException, IOException {
         // Only open the channel the first time...
-        if (isConnected()) {
-            throw new IllegalStateException("Already connected");
+        if (datagramChannel == null) {
+            datagramChannel = DatagramChannel.open();
         }
-
-        if (datagramChannel != null) {
-            datagramChannel.close();
-        }
-
-        // Resolve hostname
-        if (hostname != null) {
-            address = new InetSocketAddress(hostname, port);
-        }
-
-        datagramChannel = DatagramChannel.open();
-    }
-
-    @Override
-    public boolean isConnected() {
-    		return datagramChannel != null && !datagramChannel.socket().isClosed();
     }
 
     @Override
     public void send(String name, String value, long timestamp) throws IOException {
         // Underlying socket can be closed by ICMP
-        if (!isConnected()) {
-            connect();
+        if (datagramChannel.socket().isClosed()) {
+            datagramChannel.close();
+            datagramChannel = DatagramChannel.open();
         }
 
         try {
@@ -98,11 +83,6 @@ public class GraphiteUDP implements GraphiteSender {
     @Override
     public int getFailures() {
         return failures;
-    }
-
-    @Override
-    public void flush() throws IOException {
-    	  // Nothing to do
     }
 
     @Override

@@ -111,17 +111,12 @@ public class GraphiteRabbitMQ implements GraphiteSender {
 
     @Override
     public void connect() throws IllegalStateException, IOException {
-        if (isConnected()) {
+        if (connection != null && connection.isOpen()) {
             throw new IllegalStateException("Already connected");
         }
 
         connection = connectionFactory.newConnection();
         channel = connection.createChannel();
-    }
-
-    @Override
-    public boolean isConnected() {
-        return connection != null && connection.isOpen();
     }
 
     @Override
@@ -141,11 +136,6 @@ public class GraphiteRabbitMQ implements GraphiteSender {
             failures++;
             throw e;
         }
-    }
-
-    @Override
-    public void flush() throws IOException {
-    	  // Nothing to do
     }
 
     @Override
