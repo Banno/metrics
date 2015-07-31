@@ -299,15 +299,6 @@ public class GraphiteReporterTest {
         verifyNoMoreInteractions(graphite);
     }
 
-    @Test
-    public void closesConnectionOnReporterStop() throws Exception {
-        reporter.stop();
-
-        verify(graphite).close();
-
-        verifyNoMoreInteractions(graphite);
-    }
-
     private <T> SortedMap<String, T> map() {
         return new TreeMap<String, T>();
     }
