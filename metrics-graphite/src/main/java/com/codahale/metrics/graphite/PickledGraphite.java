@@ -171,7 +171,7 @@ public class PickledGraphite implements GraphiteSender {
 
     @Override
     public void connect() throws IllegalStateException, IOException {
-        if (isConnected()) {
+        if (socket != null) {
             throw new IllegalStateException("Already connected");
         }
         InetSocketAddress address = this.address;
@@ -184,11 +184,6 @@ public class PickledGraphite implements GraphiteSender {
 
         this.socket = socketFactory.createSocket(address.getAddress(), address.getPort());
         this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), charset));
-    }
-
-    @Override
-    public boolean isConnected() {
-        return socket != null && socket.isConnected() && !socket.isClosed();
     }
 
     /**
@@ -217,28 +212,16 @@ public class PickledGraphite implements GraphiteSender {
     }
 
     @Override
-    public void flush() throws IOException {
-        writeMetrics();
-        if (writer != null) {
-            writer.flush();
-        }
-    }
-
-    @Override
     public void close() throws IOException {
-        try {
-            flush();
-            if (writer != null) {
-                writer.close();
-            }
-        } catch (IOException ex) {
-            if (socket != null) {
-                socket.close();
-            }
-        } finally {
-            this.socket = null;
-            this.writer = null;
-        }
+      writeMetrics();
+      if (writer != null) {
+          writer.flush();
+      }
+      if (socket != null) {
+          socket.close();
+      }
+      this.socket = null;
+      this.writer = null;
     }
 
     @Override

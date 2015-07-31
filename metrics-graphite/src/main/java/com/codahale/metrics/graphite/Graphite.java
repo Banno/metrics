@@ -1,7 +1,6 @@
 package com.codahale.metrics.graphite;
 
 import javax.net.SocketFactory;
-
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -104,7 +103,7 @@ public class Graphite implements GraphiteSender {
 
     @Override
     public void connect() throws IllegalStateException, IOException {
-        if (isConnected()) {
+        if (this.socket != null || this.writer != null) {
             throw new IllegalStateException("Already connected");
         }
         InetSocketAddress address = this.address;
@@ -117,11 +116,6 @@ public class Graphite implements GraphiteSender {
 
         this.socket = socketFactory.createSocket(address.getAddress(), address.getPort());
         this.writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), charset));
-    }
-
-    @Override
-    public boolean isConnected() {
-    		return socket != null && socket.isConnected() && !socket.isClosed();
     }
 
     @Override
@@ -146,25 +140,12 @@ public class Graphite implements GraphiteSender {
     }
 
     @Override
-    public void flush() throws IOException {
+    public void close() throws IOException {
         if (writer != null) {
             writer.flush();
         }
-    }
-
-    @Override
-    public void close() throws IOException {
-        try {
-            if (writer != null) {
-                writer.close();
-            }
-        } catch (IOException ex) {
-            if (socket != null) {
-                socket.close();
-            }
-        } finally {
-            this.socket = null;
-            this.writer = null;
+        if (socket != null) {
+            socket.close();
         }
     }
 
